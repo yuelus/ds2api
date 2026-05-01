@@ -246,15 +246,15 @@ func lower(s string) string {
 	return string(b)
 }
 
-func OpenAIModelsResponse(store ModelAliasReader) map[string]any {
+func OpenAIModelsResponse(extraAliases map[string]string) map[string]any {
 	models := make([]ModelInfo, len(DeepSeekModels))
 	copy(models, DeepSeekModels)
-	if store != nil {
+	if len(extraAliases) > 0 {
 		validTargets := make(map[string]bool, len(DeepSeekModels))
 		for _, m := range DeepSeekModels {
 			validTargets[m.ID] = true
 		}
-		for alias, target := range store.ModelAliases() {
+		for alias, target := range extraAliases {
 			if !validTargets[target] {
 				continue
 			}

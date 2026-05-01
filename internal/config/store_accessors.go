@@ -21,6 +21,21 @@ func (s *Store) ModelAliases() map[string]string {
 	return out
 }
 
+func (s *Store) ConfigOnlyModelAliases() map[string]string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make(map[string]string, len(s.cfg.ModelAliases))
+	for k, v := range s.cfg.ModelAliases {
+		key := strings.TrimSpace(lower(k))
+		val := strings.TrimSpace(lower(v))
+		if key == "" || val == "" {
+			continue
+		}
+		out[key] = val
+	}
+	return out
+}
+
 func (s *Store) CompatWideInputStrictOutput() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

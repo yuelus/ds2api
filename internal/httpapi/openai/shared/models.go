@@ -14,7 +14,11 @@ type ModelsHandler struct {
 }
 
 func (h *ModelsHandler) ListModels(w http.ResponseWriter, _ *http.Request) {
-	WriteJSON(w, http.StatusOK, config.OpenAIModelsResponse(h.Store))
+	var aliases map[string]string
+	if h.Store != nil {
+		aliases = h.Store.ConfigOnlyModelAliases()
+	}
+	WriteJSON(w, http.StatusOK, config.OpenAIModelsResponse(aliases))
 }
 
 func (h *ModelsHandler) GetModel(w http.ResponseWriter, r *http.Request) {
