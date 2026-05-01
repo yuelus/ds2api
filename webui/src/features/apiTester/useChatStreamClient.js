@@ -133,6 +133,7 @@ export function useChatStreamClient({
                 model,
                 messages: [{ role: 'user', content: message }],
                 stream: streamingMode,
+                max_tokens: 8192,
             }
             
             if (attachedFiles && attachedFiles.length > 0) {

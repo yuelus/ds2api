@@ -68,6 +68,15 @@ func (h *Handler) ChatCompletions(w http.ResponseWriter, r *http.Request) {
 		writeOpenAIError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	config.Logger.Info("[debug_request]",
+		"model", stdReq.RequestedModel,
+		"resolved", stdReq.ResolvedModel,
+		"stream", stdReq.Stream,
+		"thinking", stdReq.Thinking,
+		"msg_count", len(stdReq.Messages),
+		"prompt_len", len(stdReq.FinalPrompt),
+		"pass_through", stdReq.PassThrough,
+	)
 	stdReq, err = h.applyCurrentInputFile(r.Context(), a, stdReq)
 	if err != nil {
 		status, message := mapCurrentInputFileError(err)
@@ -159,6 +168,14 @@ func (h *Handler) handleNonStream(w http.ResponseWriter, resp *http.Response, co
 		return
 	}
 	result := sse.CollectStream(resp, thinkingEnabled, true)
+
+	config.Logger.Info("[debug_nonstream_result]",
+		"model", model,
+		"thinking_len", len(result.Thinking),
+		"text_len", len(result.Text),
+		"content_filter", result.ContentFilter,
+		"text_tail", truncateStr(result.Text, 200),
+	)
 
 	stripReferenceMarkers := h.compatStripReferenceMarkers()
 	finalThinking := cleanVisibleOutput(result.Thinking, stripReferenceMarkers)

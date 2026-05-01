@@ -5,11 +5,20 @@ import (
 	"net/http"
 	"strings"
 
+	"ds2api/internal/config"
 	openaifmt "ds2api/internal/format/openai"
 	"ds2api/internal/sse"
 	streamengine "ds2api/internal/stream"
 	"ds2api/internal/toolstream"
 )
+
+func truncateStr(s string, n int) string {
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return string(r[:n]) + "..."
+}
 
 type chatStreamRuntime struct {
 	w        http.ResponseWriter
@@ -97,10 +106,44 @@ func (s *chatStreamRuntime) sendKeepAlive() {
 }
 
 func (s *chatStreamRuntime) sendChunk(v any) {
-	b, _ := json.Marshal(v)
-	_, _ = s.w.Write([]byte("data: "))
-	_, _ = s.w.Write(b)
-	_, _ = s.w.Write([]byte("\n\n"))
+	chunk, ok := v.(map[string]any)
+	if !ok {
+		b, _ := json.Marshal(v)
+		_, _ = s.w.Write([]byte("data: "))
+		_, _ = s.w.Write(b)
+		_, _ = s.w.Write([]byte("\n\n"))
+		if s.canFlush {
+			_ = s.rc.Flush()
+		}
+		return
+	}
+	choices, _ := chunk["choices"].([]map[string]any)
+	if len(choices) <= 1 {
+		b, _ := json.Marshal(chunk)
+		_, _ = s.w.Write([]byte("data: "))
+		_, _ = s.w.Write(b)
+		_, _ = s.w.Write([]byte("\n\n"))
+		if s.canFlush {
+			_ = s.rc.Flush()
+		}
+		return
+	}
+	for _, choice := range choices {
+		split := map[string]any{
+			"id":      chunk["id"],
+			"object":  chunk["object"],
+			"created": chunk["created"],
+			"model":   chunk["model"],
+			"choices": []map[string]any{choice},
+		}
+		if u, ok := chunk["usage"]; ok {
+			split["usage"] = u
+		}
+		b, _ := json.Marshal(split)
+		_, _ = s.w.Write([]byte("data: "))
+		_, _ = s.w.Write(b)
+		_, _ = s.w.Write([]byte("\n\n"))
+	}
 	if s.canFlush {
 		_ = s.rc.Flush()
 	}
@@ -143,6 +186,15 @@ func (s *chatStreamRuntime) finalize(finishReason string, deferEmptyOutput bool)
 	finalText := cleanVisibleOutput(s.text.String(), s.stripReferenceMarkers)
 	s.finalThinking = finalThinking
 	s.finalText = finalText
+	config.Logger.Info("[debug_stream_result]",
+		"model", s.model,
+		"thinking_len", len(finalThinking),
+		"raw_text_len", s.rawText.Len(),
+		"final_text_len", len(finalText),
+		"finish_reason", finishReason,
+		"raw_text_tail", truncateStr(s.rawText.String(), 100),
+		"final_text_tail", truncateStr(finalText, 100),
+	)
 	detected := detectAssistantToolCalls(s.rawText.String(), finalText, s.rawThinking.String(), finalToolDetectionThinking, s.toolNames)
 	if len(detected.Calls) > 0 && !s.toolCallsDoneEmitted {
 		finishReason = "tool_calls"
