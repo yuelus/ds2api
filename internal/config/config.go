@@ -179,8 +179,9 @@ type HistorySplitConfig struct {
 }
 
 type CurrentInputFileConfig struct {
-	Enabled  *bool `json:"enabled,omitempty"`
-	MinChars int   `json:"min_chars,omitempty"`
+	Enabled            *bool `json:"enabled,omitempty"`
+	MinChars           int   `json:"min_chars,omitempty"`
+	MaxTotalPromptChars int  `json:"max_total_prompt_chars,omitempty"`
 }
 
 type ThinkingInjectionConfig struct {

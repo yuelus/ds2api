@@ -201,6 +201,12 @@ func (s *Store) CurrentInputFileMinChars() int {
 	return s.cfg.CurrentInputFile.MinChars
 }
 
+func (s *Store) CurrentInputFileMaxTotalPromptChars() int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.cfg.CurrentInputFile.MaxTotalPromptChars
+}
+
 func (s *Store) ThinkingInjectionEnabled() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

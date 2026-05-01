@@ -48,7 +48,7 @@ func (c Config) MarshalJSON() ([]byte, error) {
 	if c.HistorySplit.Enabled != nil || c.HistorySplit.TriggerAfterTurns != nil {
 		m["history_split"] = c.HistorySplit
 	}
-	if c.CurrentInputFile.Enabled != nil || c.CurrentInputFile.MinChars != 0 {
+	if c.CurrentInputFile.Enabled != nil || c.CurrentInputFile.MinChars != 0 || c.CurrentInputFile.MaxTotalPromptChars != 0 {
 		m["current_input_file"] = c.CurrentInputFile
 	}
 	if c.ThinkingInjection.Enabled != nil || strings.TrimSpace(c.ThinkingInjection.Prompt) != "" {

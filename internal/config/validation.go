@@ -116,7 +116,14 @@ func ValidateAutoDeleteConfig(autoDelete AutoDeleteConfig) error {
 
 func ValidateCurrentInputFileConfig(currentInputFile CurrentInputFileConfig) error {
 	if currentInputFile.MinChars != 0 {
-		return ValidateIntRange("current_input_file.min_chars", currentInputFile.MinChars, 1, 100000000, true)
+		if err := ValidateIntRange("current_input_file.min_chars", currentInputFile.MinChars, 1, 100000000, true); err != nil {
+			return err
+		}
+	}
+	if currentInputFile.MaxTotalPromptChars != 0 {
+		if err := ValidateIntRange("current_input_file.max_total_prompt_chars", currentInputFile.MaxTotalPromptChars, 1, 100000000, true); err != nil {
+			return err
+		}
 	}
 	return nil
 }

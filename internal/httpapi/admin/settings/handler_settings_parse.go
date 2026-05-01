@@ -164,6 +164,13 @@ func parseSettingsUpdateRequest(req map[string]any) (*config.AdminConfig, *confi
 			}
 			cfg.MinChars = n
 		}
+		if v, exists := raw["max_total_prompt_chars"]; exists {
+			n := intFrom(v)
+			if err := config.ValidateIntRange("current_input_file.max_total_prompt_chars", n, 0, 100000000, true); err != nil {
+				return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+			}
+			cfg.MaxTotalPromptChars = n
+		}
 		if err := config.ValidateCurrentInputFileConfig(*cfg); err != nil {
 			return nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 		}
