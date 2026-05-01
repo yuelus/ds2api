@@ -743,7 +743,7 @@ func TestStoreExportJSONAndBase64(t *testing.T) {
 // ─── OpenAIModelsResponse / ClaudeModelsResponse ─────────────────────
 
 func TestOpenAIModelsResponse(t *testing.T) {
-	resp := OpenAIModelsResponse()
+	resp := OpenAIModelsResponse(nil)
 	if resp["object"] != "list" {
 		t.Fatalf("unexpected object: %v", resp["object"])
 	}

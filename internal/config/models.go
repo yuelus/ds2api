@@ -246,8 +246,27 @@ func lower(s string) string {
 	return string(b)
 }
 
-func OpenAIModelsResponse() map[string]any {
-	return map[string]any{"object": "list", "data": DeepSeekModels}
+func OpenAIModelsResponse(store ModelAliasReader) map[string]any {
+	models := make([]ModelInfo, len(DeepSeekModels))
+	copy(models, DeepSeekModels)
+	if store != nil {
+		validTargets := make(map[string]bool, len(DeepSeekModels))
+		for _, m := range DeepSeekModels {
+			validTargets[m.ID] = true
+		}
+		for alias, target := range store.ModelAliases() {
+			if !validTargets[target] {
+				continue
+			}
+			models = append(models, ModelInfo{
+				ID:      alias,
+				Object:  "model",
+				Created: 1677610602,
+				OwnedBy: target,
+			})
+		}
+	}
+	return map[string]any{"object": "list", "data": models}
 }
 
 func OpenAIModelByID(store ModelAliasReader, id string) (ModelInfo, bool) {
