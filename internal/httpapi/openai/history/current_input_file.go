@@ -30,10 +30,17 @@ func (s Service) ApplyCurrentInputFile(ctx context.Context, a *auth.RequestAuth,
 		return stdReq, nil
 	}
 
-	// Check if total prompt exceeds max_total_prompt_chars threshold
-	if maxTotalChars > 0 && len(stdReq.FinalPrompt) >= maxTotalChars {
-		// Total prompt too long, force file upload regardless of message length
-	} else if len([]rune(text)) < threshold {
+	// Check conditions for file upload
+	needsUpload := false
+	if maxTotalChars > 0 && len([]rune(stdReq.FinalPrompt)) >= maxTotalChars {
+		// Total prompt too long, force file upload
+		needsUpload = true
+	} else if len([]rune(text)) >= threshold {
+		// Last user message is long enough for file upload
+		needsUpload = true
+	}
+
+	if !needsUpload {
 		return stdReq, nil
 	}
 	fileText := promptcompat.BuildOpenAICurrentInputContextTranscript(stdReq.Messages)
